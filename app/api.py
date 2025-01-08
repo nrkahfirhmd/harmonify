@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import pymysql
 import pandas as pd
+import numpy as np
 from datetime import datetime
 
 app = Flask(__name__)
@@ -33,6 +34,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/db_harm
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+songs = pd.read_csv('../model/data.csv')
+similarity = pd.read_csv('../model/results.csv')
+similarity.drop('spotify_id', axis=1, inplace=True)
+similarity = np.array(similarity)
+
 class User(db.Model):
     __tablename__ = 'users'
     username = db.Column(db.String(255), primary_key=True, nullable=False)
@@ -59,8 +65,6 @@ class Song(db.Model):
     year = db.Column(db.Integer, nullable=False)
 
 def bulk_insert_songs():
-    songs = pd.read_csv('../model/data.csv')
-    
     with app.app_context():
         for index, row in songs.iterrows():
             song = Song(
@@ -90,6 +94,14 @@ def migrate_and_seed():
         db.session.commit()
         
         return jsonify({"message": "migrate and seed success!"}), 200
+    
+@app.route('/recommend/<id>/<int:top_n>', methods=['GET'])
+def recommend(id, top_n):
+    song_idx = songs.index[songs['spotify_id'] == id][0]
+    similar_indices = similarity[song_idx].argsort()[::-1][1:top_n+1]
+    recommendations = songs.iloc[similar_indices]
+    
+    return jsonify({"recommendations": recommendations.to_dict(orient='records')}), 200
     
 # CHECK API HEALTH
 @app.route("/health", methods=["GET"])
