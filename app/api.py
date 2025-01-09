@@ -4,6 +4,7 @@ import pymysql
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import random
 
 app = Flask(__name__)
 
@@ -34,10 +35,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/db_harm
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+session = {}
+
 songs = pd.read_csv('../model/data.csv')
 similarity = pd.read_csv('../model/results.csv')
 similarity.drop('spotify_id', axis=1, inplace=True)
 similarity = np.array(similarity)
+
+recommendations = []
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -54,6 +59,7 @@ class Playlist(db.Model):
     __tablename__ = 'playlists'
     id = db.Column(db.String(255), primary_key=True, nullable=False)
     songs_id = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
 class Song(db.Model):
     __tablename__ = 'songs'
@@ -102,6 +108,41 @@ def recommend(id, top_n):
     recommendations = songs.iloc[similar_indices]
     
     return jsonify({"recommendations": recommendations.to_dict(orient='records')}), 200
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.json['username']
+    password = request.json['password']
+    
+    user = User.query.filter_by(username=username, password=password).first()
+    
+    if user:
+        session['username'] = username
+        session['logged_in'] = True
+        return jsonify({"message": "login success!"}), 200
+    else:
+        return jsonify({"message": "login failed!"}), 401
+    
+@app.route('/register', methods=['POST'])
+def register():
+    username = request.json['username']
+    password = request.json['password']
+    confirm = request.json['confirm']
+    
+    if password == confirm:
+        user = User.query.filter_by(username=username).first()
+        
+        if user:
+            return jsonify({"message": "username already exists!"}), 401
+        else:
+            new_user = User(username=username, password=password)
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            return jsonify({"message": "register success!"}), 200
+    else:
+        return jsonify({"message": "password and confirm password must be the same!"}), 401
     
 # CHECK API HEALTH
 @app.route("/health", methods=["GET"])
