@@ -42,6 +42,7 @@ similarity = pd.read_csv('../model/results.csv')
 similarity.drop('spotify_id', axis=1, inplace=True)
 similarity = np.array(similarity)
 
+song_query = ""
 recommendations = {}
 
 class User(db.Model):
@@ -53,13 +54,14 @@ class Result(db.Model):
     __tablename__ = 'results'
     id = db.Column(db.String(255), primary_key=True, nullable=False)
     user_id = db.Column(db.String(255), db.ForeignKey('users.username'), nullable=False)
+    song = db.Column(db.String(255), nullable=False)
     playlist_id = db.Column(db.String(255), db.ForeignKey('playlists.id'), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
 class Playlist(db.Model):
     __tablename__ = 'playlists'
     id = db.Column(db.String(255), primary_key=True, nullable=False)
     songs_id = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
 class Song(db.Model):
     __tablename__ = 'songs'
@@ -110,7 +112,8 @@ def drop():
     
 @app.route('/recommend/<id>/<int:top_n>', methods=['GET'])
 def recommend(id, top_n):
-    global recommendations
+    global recommendations, song_query
+    song_query = id
     song_idx = songs.index[songs['spotify_id'] == id][0]
     similar_indices = similarity[song_idx].argsort()[::-1][1:top_n+1]
     recommendations = songs.iloc[similar_indices]
@@ -155,9 +158,7 @@ def register():
 
 @app.route('/save-result', methods=['GET'])
 def save_result():
-    global session, recommendations
-    print(recommendations)
-    print(session.get('logged_in'))
+    global session, recommendations, song_query
     if not recommendations.empty and session.get('logged_in'):
         song_ids = ','.join(recommendations['spotify_id'].astype(str).values)
         
@@ -171,7 +172,8 @@ def save_result():
         results = Result(
             id=create_random_id(),
             user_id=session['username'],
-            playlist_id=random_id
+            playlist_id=random_id,
+            song=song_query
         )
         
         db.session.add(playlist)
@@ -181,6 +183,40 @@ def save_result():
         return jsonify({"message": "result saved!"}), 200
     else:
         return jsonify({"message": "result not saved!"}), 401
+    
+@app.route('/get-history', methods=['GET'])
+def get_history():
+    global session
+    if session.get('logged_in'):
+        results = Result.query.filter_by(user_id=session['username']).all()
+        
+        return jsonify({"history": [result.playlist_id for result in results]}), 200
+    else:
+        return jsonify({"message": "you must login first!"}), 401
+    
+@app.route('/get-playlist/<id>', methods=['GET'])
+def get_playlist(id):
+    playlist = Playlist.query.filter_by(id=id).first()
+    
+    if playlist:
+        song_ids = playlist.songs_id.split(',')
+        songs = Song.query.filter(Song.id.in_(song_ids)).all()
+        
+        songs_list = [
+            {
+                "id": song.id,
+                "name": song.name,
+                "album": song.album,
+                "artist": song.artist,
+                "duration": song.duration,
+                "year": song.year
+            }
+            for song in songs
+        ]
+        
+        return jsonify({"playlist": songs_list}), 200
+    else:
+        return jsonify({"message": "playlist not found!"}), 404
     
 def create_random_id():
     characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
