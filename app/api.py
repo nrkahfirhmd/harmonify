@@ -42,7 +42,7 @@ similarity = pd.read_csv('../model/results.csv')
 similarity.drop('spotify_id', axis=1, inplace=True)
 similarity = np.array(similarity)
 
-recommendations = []
+recommendations = {}
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -101,8 +101,16 @@ def migrate_and_seed():
         
         return jsonify({"message": "migrate and seed success!"}), 200
     
+@app.route('/drop', methods=['POST'])
+def drop():
+    with app.app_context():
+        db.drop_all()
+        
+        return jsonify({"message": "drop success!"}), 200
+    
 @app.route('/recommend/<id>/<int:top_n>', methods=['GET'])
 def recommend(id, top_n):
+    global recommendations
     song_idx = songs.index[songs['spotify_id'] == id][0]
     similar_indices = similarity[song_idx].argsort()[::-1][1:top_n+1]
     recommendations = songs.iloc[similar_indices]
@@ -111,8 +119,9 @@ def recommend(id, top_n):
 
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.json['username']
-    password = request.json['password']
+    global session
+    username = request.form['username']
+    password = request.form['password']
     
     user = User.query.filter_by(username=username, password=password).first()
     
@@ -125,9 +134,9 @@ def login():
     
 @app.route('/register', methods=['POST'])
 def register():
-    username = request.json['username']
-    password = request.json['password']
-    confirm = request.json['confirm']
+    username = request.form['username']
+    password = request.form['password']
+    confirm = request.form['confirm']
     
     if password == confirm:
         user = User.query.filter_by(username=username).first()
@@ -143,6 +152,40 @@ def register():
             return jsonify({"message": "register success!"}), 200
     else:
         return jsonify({"message": "password and confirm password must be the same!"}), 401
+
+@app.route('/save-result', methods=['GET'])
+def save_result():
+    global session, recommendations
+    print(recommendations)
+    print(session.get('logged_in'))
+    if not recommendations.empty and session.get('logged_in'):
+        song_ids = ','.join(recommendations['spotify_id'].astype(str).values)
+        
+        random_id = create_random_id()
+        
+        playlist = Playlist(
+            id=random_id,
+            songs_id=song_ids
+        )
+        
+        results = Result(
+            id=create_random_id(),
+            user_id=session['username'],
+            playlist_id=random_id
+        )
+        
+        db.session.add(playlist)
+        db.session.add(results)
+        db.session.commit()
+        
+        return jsonify({"message": "result saved!"}), 200
+    else:
+        return jsonify({"message": "result not saved!"}), 401
+    
+def create_random_id():
+    characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    
+    return ''.join(random.choice(characters) for i in range(10))
     
 # CHECK API HEALTH
 @app.route("/health", methods=["GET"])
