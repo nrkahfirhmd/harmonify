@@ -188,9 +188,20 @@ def save_result():
 def get_history():
     global session
     if session.get('logged_in'):
-        results = Result.query.filter_by(user_id=session['username']).all()
+        query = Result.query.filter_by(user_id=session['username']).all()
         
-        return jsonify({"history": [result.playlist_id for result in results]}), 200
+        results = []
+        for result in query:
+            song = Song.query.filter_by(id=result.song).first()
+            
+            results.append({
+                "track": song.name,
+                "artist": song.artist,
+                "created_at": result.created_at,
+                "playlist_id": result.playlist_id 
+            })
+        
+        return jsonify({"history": results}), 200
     else:
         return jsonify({"message": "you must login first!"}), 401
     
