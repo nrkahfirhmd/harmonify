@@ -229,6 +229,13 @@ def get_playlist(id):
     else:
         return jsonify({"message": "playlist not found!"}), 404
     
+@app.route('/logout', methods=['GET'])
+def logout():
+    global session
+    session.clear()
+    
+    return jsonify({"message": "logout success!"}), 200
+    
 def create_random_id():
     characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     
