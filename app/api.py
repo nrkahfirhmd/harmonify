@@ -235,6 +235,24 @@ def logout():
     session.clear()
     
     return jsonify({"message": "logout success!"}), 200
+
+@app.route('/search/<name>', methods=['GET'])
+def search_songs(name):
+    songs = Song.query.filter(Song.name.like(f'%{name}%')).all()
+    
+    songs_list = [
+        {
+            "id": song.id,
+            "name": song.name,
+            "album": song.album,
+            "artist": song.artist,
+            "duration": song.duration,
+            "year": song.year
+        }
+        for song in songs
+    ]
+    
+    return jsonify({"songs": songs_list}), 200
     
 def create_random_id():
     characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
