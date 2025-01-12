@@ -253,6 +253,11 @@ def search_songs(name):
     ]
     
     return jsonify({"songs": songs_list}), 200
+
+@app.route('/is-logged-in', methods=['GET'])
+def is_logged_in():
+    global session
+    return jsonify({"logged_in": session.get('logged_in', False)}), 200
     
 def create_random_id():
     characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
