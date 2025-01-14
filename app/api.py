@@ -56,7 +56,7 @@ class Result(db.Model):
     user_id = db.Column(db.String(255), db.ForeignKey('users.username'), nullable=False)
     song = db.Column(db.String(255), nullable=False)
     playlist_id = db.Column(db.String(255), db.ForeignKey('playlists.id'), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now().date())
 
 class Playlist(db.Model):
     __tablename__ = 'playlists'
@@ -258,6 +258,11 @@ def search_songs(name):
 def is_logged_in():
     global session
     return jsonify({"logged_in": session.get('logged_in', False)}), 200
+
+@app.route('/get-username', methods=['GET'])
+def get_username():
+    global session
+    return jsonify({"username": session.get('username', '')}), 200
     
 def create_random_id():
     characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
