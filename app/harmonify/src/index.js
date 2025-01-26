@@ -3,12 +3,16 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <div className="p-10 bg-[#F8F4E1] w-full h-[100vh]">
+    <div className="px-20 bg-[#F8F4E1] w-full h-[100vh]">
+      <Header />
       <App />
+      <Footer />
     </div>
   </React.StrictMode>
 );
