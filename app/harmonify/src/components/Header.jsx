@@ -2,9 +2,9 @@ function Header() {
   return ( 
     <div className="flex justify-between items-center py-5">
         <div className="w-100">
-            <img src="/logo.png" alt="logo" className="h-16" />
+            <img src="/images/logo.png" alt="logo" className="h-16" />
         </div>
-        {/* <div className="text-[#74512D] font-bold text-2xl">
+        {/* <div className="font-bold text-2xl">
             nurkahfi061204
         </div> */}
         <div className="flex gap-5">
