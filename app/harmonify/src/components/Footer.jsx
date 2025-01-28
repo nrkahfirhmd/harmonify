@@ -1,7 +1,7 @@
 function Footer() {
   return ( 
-    <div className="flex justify-center items-center py-5 flex-col gap-3">
-      <p className="highlight text-xl">
+    <div className="flex justify-center items-center py-3 md:py-5 flex-col gap-3">
+      <p className="highlight text-base md:text-xl">
         &copy; 2025 Nurkahfi Amran Rahmada 
       </p>
       <div className="flex gap-2">
