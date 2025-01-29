@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
+import Main from './Main';
 import reportWebVitals from './reportWebVitals';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -9,9 +9,9 @@ import Footer from './components/Footer';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <div className="px-5 md:px-20 bg-[#F8F4E1] w-full h-[100vh]">
+    <div className="px-5 md:px-20 bg-[#F8F4E1] w-full min-h-screen flex flex-col gap-5">
       <Header />
-      <App />
+      <Main />
       <Footer />
     </div>
   </React.StrictMode>
