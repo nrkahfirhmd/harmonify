@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import Main from './Main';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import reportWebVitals from './reportWebVitals';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -12,7 +13,7 @@ root.render(
   <React.StrictMode>
     <div className="px-5 md:px-20 bg-[#F8F4E1] w-full min-h-screen flex flex-col gap-5">
       <Header />
-      <Login />
+      <Register />
       <Footer />
     </div>
   </React.StrictMode>
