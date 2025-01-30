@@ -1,5 +1,3 @@
-import logo from './logo.svg';
-
 function Main() {
   return ( 
     <div className="min-h-[75vh] flex justify-center items-center flex-col gap-5 w-full">
