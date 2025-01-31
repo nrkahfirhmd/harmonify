@@ -13,7 +13,7 @@ root.render(
   <React.StrictMode>
     <div className="px-5 md:px-20 bg-[#F8F4E1] w-full min-h-screen flex flex-col gap-5">
       <Header />
-      <Register />
+      <Login />
       <Footer />
     </div>
   </React.StrictMode>
